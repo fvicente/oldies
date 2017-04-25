@@ -1,0 +1,305 @@
+*  FILE NAME: ECG.PRG
+*  BY: BERNARDO KATZ Y JUAN MATTEUCCI
+*  DATE: July 26, 1995
+*  DESC:
+*  CALLED BY:
+*  DATA FILES:
+SET SCOREBOARD OFF
+SET CURSOR OFF
+*************
+PUBLIC CNTMNU, POSMENU
+CNTMNU=0
+POSMENU=1
+PUBLIC AUXY[2],AUXX[2],AUXPAL[2],YY[1],XX[1],PALAB[1],AUXRAPIDA[2],RAPIDA[1]
+*************
+VAR=0
+USE ECG INDEX REEMP
+CLEAR
+DO PANT
+ACUMMENU(0, 3, " &Buscar ")
+ACUMMENU(0, 12, " &Ingresar ")
+ACUMMENU(0, 23, " &Modificar ")
+ACUMMENU(0, 35, " &Reindexar ")
+ACUMMENU(0, 47, " &Salir ")
+
+SET COLOR TO ("N/W")
+@  0, 0 SAY "                                                                               "
+@ 24, 0 SAY "                                                                               "
+
+SET COLOR TO ("W/N")
+@ 3, 14 SAY "ллллллл"
+@ 4, 14 SAY "ллппппп "
+@ 5, 14 SAY "лл "
+@ 6, 14 SAY "ллллл"
+@ 7, 14 SAY "ллппп "
+@ 8, 14 SAY "лл "
+@ 9, 14 SAY "ллллллл"
+@ 10,14 SAY "ппппппп "
+
+@ 3, 35 SAY "ллллллл"
+@ 4, 35 SAY "ллппппп "
+@ 5, 35 SAY "лл "
+@ 6, 35 SAY "лл "
+@ 7, 35 SAY "лл "
+@ 8, 35 SAY "лл "
+@ 9, 35 SAY "ллллллл"
+@ 10,35 SAY "ппппппп "
+
+@ 3, 56 SAY "ллллллл"
+@ 4, 56 SAY "ллппппп "
+@ 5, 56 SAY "лл "
+@ 6, 56 SAY "лл "
+@ 6, 60 SAY "ллл"
+@ 7, 56 SAY "лл "
+@ 7, 60 SAY "плл "
+@ 8, 56 SAY "лл "
+@ 8, 61 SAY "лл "
+@ 9, 56 SAY "ллллллл "
+@ 10,56 SAY "ппппппп "
+
+
+DO WHILE (.T.)
+   SMENU(0, @VAR)
+   DO CASE
+   CASE VAR==1
+      DO BUSCAR
+   CASE VAR==2
+      DO INGRESAR
+   CASE VAR==3
+      DO MODIFICAR
+   CASE VAR==4
+      DO REINDEXAR
+   CASE VAR==5
+      SET CURSOR ON
+      SET COLOR TO ("")
+      CLEAR
+      QUIT
+   ENDCASE
+ENDDO
+
+PROCEDURE PANT
+SET COLOR TO ("B/W")
+FOR A=0 TO 24
+@ A, 0 SAY REPLICATE("А",79)
+NEXT A
+SET COLOR TO ("")
+RETURN
+
+PROCEDURE ACUMMENU
+PARAMETERS Y, X, PALABRA
+CARACTER=' '
+CNTMNU=CNTMNU+1
+PUBLIC PALAB[CNTMNU+1],XX[CNTMNU+1],YY[CNTMNU+1],RAPIDA[CNTMNU+1]
+AUXY[CNTMNU]=Y
+AUXX[CNTMNU]=X
+AUXPAL[CNTMNU]=PALABRA
+IF (AT('&', PALABRA)!=0)
+   CARACTER=SUBSTR(PALABRA, AT('&', PALABRA)+1, 1)
+   AUXRAPIDA[CNTMNU]=CARACTER
+ENDIF
+ACOPY(AUXPAL, PALAB)
+ACOPY(AUXX, XX)
+ACOPY(AUXY, YY)
+ACOPY(AUXRAPIDA, RAPIDA)
+PUBLIC AUXPAL[CNTMNU+2],AUXX[CNTMNU+2],AUXY[CNTMNU+2],AUXRAPIDA[CNTMNU+2]
+ACOPY(PALAB, AUXPAL)
+ACOPY(XX, AUXX)
+ACOPY(YY, AUXY)
+ACOPY(RAPIDA, AUXRAPIDA)
+RETURN
+
+PROCEDURE SMENU
+PARAMETERS TIPO, DEVUELVO
+TECLA=0
+POSMENU=1
+IF (TIPO==0)
+   DO PINTAMENU
+   DO WHILE (.T.)
+      TECLA=INKEY(0)
+      DO CASE
+      CASE TECLA==13
+         DEVUELVO=POSMENU
+         RETURN
+      CASE TECLA==27
+         DEVUELVO=27
+         RETURN
+      CASE TECLA==4
+         IF POSMENU<CNTMNU
+            POSMENU=POSMENU+1
+            DO PINTAMENU
+         ELSE
+            IF POSMENU!=1
+               POSMENU=1
+               DO PINTAMENU
+            ENDIF
+         ENDIF
+      CASE TECLA==19
+         IF POSMENU>1
+            POSMENU=POSMENU-1
+            DO PINTAMENU
+         ELSE
+            IF POSMENU==1 .AND. CNTMNU!=1
+               POSMENU=CNTMNU
+               DO PINTAMENU
+            ENDIF
+         ENDIF
+      OTHERWISE
+         FOR N=1 TO CNTMNU
+         IF TECLA==ASC(RAPIDA[N]) .OR. UPPER(CHR(TECLA))==UPPER(RAPIDA[N])
+            POSMENU=N
+            DO PINTAMENU
+            DEVUELVO=POSMENU
+            RETURN
+         ENDIF
+         NEXT N
+      ENDCASE
+   ENDDO
+   
+ELSE
+ENDIF
+RETURN
+
+PROCEDURE PINTAMENU
+CARA=' '
+VARCOL="W"
+FOR NN=1 TO CNTMNU
+IF NN==POSMENU
+   VARCOL="G"
+ELSE
+   VARCOL="W"
+ENDIF
+SET COLOR TO ("N/"+VARCOL)
+CONTS=-1
+FOR AF=1 TO LEN(PALAB[NN])
+CARA=SUBSTR(PALAB[NN],AF,1)
+IF (CARA!="&")
+   CONTS=CONTS+1
+   @ YY[NN], XX[NN]+CONTS SAY CARA
+   SET COLOR TO ("N/"+VARCOL)
+ELSE
+   SET COLOR TO ("R/"+VARCOL)
+ENDIF
+NEXT AF
+NEXT NN
+RETURN
+
+PROCEDURE MODIFICAR
+PANTALLA=SAVESCREEN(6,20,12,60)
+SET COLOR TO ("N/W")
+@ 24, 0 SAY " ESC - Salir                                                                   "
+SET COLOR TO ("GR+/R")
+@ 8, 21 CLEAR TO 10, 59
+@ 7, 20 TO 11, 60 DOUBLE
+BUS=SPACE(20)
+SET CURSOR ON
+@ 9, 22 SAY "Comp Buscado: " GET BUS
+READ
+IF LASTKEY()=27
+	SET COLOR TO ("")
+	RESTSCREEN(6,20,12,60,PANTALLA)
+	SET COLOR TO ("N/W")
+	@ 24, 0 SAY "                                                                               "
+	SET CURSOR OFF
+	RETURN
+ENDIF
+
+SEEK (BUS)
+IF (!FOUND())
+	@ 8, 21 CLEAR TO 11, 59
+	@ 7, 20 TO 12, 60 DOUBLE
+	@ 9, 25 SAY " NO SE ENCONTRO EL COMPONENTE"
+	@ 10, 22 SAY "PRESIONE UNA TECLA PARA CONTINUAR..."
+	INKEY(0)
+	SET COLOR TO ("")
+	RESTSCREEN(6,20,12,60,PANTALLA)
+	SET COLOR TO ("N/W")
+	@ 24, 0 SAY "                                                                               "
+	SET CURSOR OFF
+	RETURN
+ELSE
+	@ 7, 21 CLEAR TO 11, 59
+	@ 6, 20 TO 12, 60 DOUBLE
+	SET CURSOR ON
+	COMP=A_reemplaz
+	REEM=Reemplazo
+	@ 8, 22 SAY "Componente: " GET COMP
+	@ 10, 22 SAY "Reemplazo: " GET REEM
+	READ
+	IF LASTKEY()=27
+		SET COLOR TO ("")
+		RESTSCREEN(6,20,12,60,PANTALLA)
+		SET COLOR TO ("N/W")
+		@ 24, 0 SAY "                                                                               "
+		SET CURSOR OFF
+		RETURN
+	ENDIF
+	REPLACE A_reemplaz WITH COMP
+	REPLACE Reemplazo  WITH REEM
+	COMMIT
+	SET COLOR TO ("")
+	RESTSCREEN(6,20,12,60,PANTALLA)
+	SET COLOR TO ("N/W")
+	@ 24, 0 SAY "                                                                               "
+	SET CURSOR OFF
+	RETURN
+RETURN
+
+PROCEDURE INGRESAR
+PANTALLA=SAVESCREEN(6,20,12,60)
+SET COLOR TO ("N/W")
+@ 24, 0 SAY " ESC - Salir                                                                   "
+SET COLOR TO ("GR+/R")
+@ 7, 21 CLEAR TO 11, 59
+@ 6, 20 TO 12, 60 DOUBLE
+SET CURSOR ON
+DO WHILE (.T.)
+COMP=SPACE(20)
+REEM=SPACE(20)
+@ 8, 22 SAY "Componente: " GET COMP
+@ 10, 22 SAY "Reemplazo: " GET REEM
+READ
+IF LASTKEY()=27
+	SET COLOR TO ("")
+	RESTSCREEN(6,20,12,60,PANTALLA)
+	SET COLOR TO ("N/W")
+	@ 24, 0 SAY "                                                                               "
+	SET CURSOR OFF
+	RETURN
+ENDIF
+APPEND BLANK
+REPLACE A_reemplaz WITH COMP
+REPLACE Reemplazo  WITH REEM
+COMMIT
+ENDDO
+RETURN
+
+PROCEDURE REINDEXAR
+PANTALLA=SAVESCREEN(6,20,12,60)
+SET COLOR TO ("N/W")
+@ 24, 0 SAY " ESC - Salir                                                                   "
+SET COLOR TO ("GR+/R")
+@ 8, 21 CLEAR TO 10, 59
+@ 7, 20 TO 11, 60 DOUBLE
+ESP=' '
+SET CURSOR ON
+@ 9, 23 SAY "ESTA SEGURO QUE DESEA REINDEXAR ? " GET ESP
+READ
+IF LASTKEY()=27 .OR. UPPER(ESP)!="S"
+	SET COLOR TO ("")
+	RESTSCREEN(6,20,12,60,PANTALLA)
+	SET COLOR TO ("N/W")
+	@ 24, 0 SAY "                                                                               "
+	SET CURSOR OFF
+	RETURN
+ELSE
+	SET CURSOR OFF
+	@ 9, 22 SAY "         REINDEXANDO   .....          "
+	REINDEX
+	SET COLOR TO ("")
+	RESTSCREEN(6,20,12,60,PANTALLA)
+	SET COLOR TO ("N/W")
+	@ 24, 0 SAY "                                                                               "
+ENDIF
+
+RETURN
+
