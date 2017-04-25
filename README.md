@@ -1,2 +1,2 @@
 # oldies
-Old project in several languages, Basic, Clipper, Visual Basic
+Old projects in several languages, Basic, Clipper, Visual Basic
